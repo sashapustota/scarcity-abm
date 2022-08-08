@@ -15,15 +15,16 @@ library(berryFunctions)
 
 ```{r}
 
-df_c = read.csv("export_control.csv")
+df_c1 = read.csv("export_control_1.csv")
 df_c2 = read.csv("export_control_2.csv")
 df_c3 = read.csv("export_control_3.csv")
 df_c4 = read.csv("export_control_4.csv")
 df_c5 = read.csv("export_control_5.csv")
 
+# The below line should be run through each of the df (from 1 to 5)
 colnames(df_c5) <- c("time","prot_c","predRes_c","predGoods_c", "prod_c", "condition")
 
-df_list <- list(df_c, df_c2, df_c3, df_c4, df_c5)
+df_list <- list(df_c1, df_c2, df_c3, df_c4, df_c5)
 
 df_control = df_list %>% reduce(full_join, by='time')
 
@@ -37,7 +38,7 @@ df_control = df_control[, -c(2:25)]
 
 # Now scarcity
 
-df_c = read.csv("export_scarcity.csv")
+df_c1 = read.csv("export_scarcity_1.csv")
 df_c2 = read.csv("export_scarcity_2.csv")
 df_c3 = read.csv("export_scarcity_3.csv")
 df_c4 = read.csv("export_scarcity_4.csv")
@@ -45,7 +46,7 @@ df_c5 = read.csv("export_scarcity_5.csv")
 
 colnames(df_c5) <- c("time","prot_c","predRes_c","predGoods_c", "prod_c", "condition")
 
-df_list <- list(df_c, df_c2, df_c3, df_c4, df_c5)
+df_list <- list(df_c1, df_c2, df_c3, df_c4, df_c5)
 
 df_control_scarcity = df_list %>% reduce(full_join, by='time')
 
@@ -57,13 +58,27 @@ df_scarcity = df_control_scarcity %>%
 
 df_scarcity = df_scarcity[, -c(2:25)]
 
+df_final = rbind(df_scarcity, df_control)
+
 
 ```
 
 ```{r}
 # Analysis
 
+m1 = lm(predRes ~ condition, df_final)
+summary(m1)
 
+ggplot(data = df_final) +
+  geom_smooth(mapping = aes(x = time, y = predRes, colour = condition))
+
+######
+
+m2 = lm(predGoods ~ condition, df_final)
+summary(m2)
+
+ggplot(data = df_final) +
+  geom_smooth(mapping = aes(x = time, y = predGoods, colour = condition))
 
 ```
 
