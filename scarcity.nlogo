@@ -5,14 +5,6 @@ turtles-own [labour age utility predationRes predationGoods protection productio
 
 globals [alpha beta lambda csv-list condition first-resource-shock first-resource-shock-end second-resource-shock second-resource-shock-end third-resource-shock third-resource-shock-end]
 
-to write-csv
-
-  if ticks = 10000 [
-
-    csv:to-file "export_control_test.csv" csv-list
-
-  ]
-end
 
 to setup
 
@@ -160,8 +152,9 @@ to go
   ]
   resource-shock
   tick
-  prep-csv
-  write-csv
+  ; Enable below functions to produce CSV files for different simulation runs.
+  ;prep-csv
+  ;write-csv
 end
 
 
@@ -481,6 +474,14 @@ to resource-shock
 
 end
 
+to write-csv
+
+  if ticks = 10000 [
+
+    csv:to-file "export_control_test.csv" csv-list
+
+  ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 268
