@@ -31,15 +31,15 @@ to setup
 
   ;let t random-normal 2500 500
   set first-resource-shock round random-normal 2500 500
-  set first-resource-shock-end first-resource-shock + round random-normal 1000 100
+  set first-resource-shock-end first-resource-shock + round random-normal resource-shock-duration 100
 
   ;let j random-normal 5000 500
   set second-resource-shock round random-normal 5000 500
-  set second-resource-shock-end second-resource-shock + round random-normal 1000 100
+  set second-resource-shock-end second-resource-shock + round random-normal resource-shock-duration 100
 
   ;let r random-normal 7500 500
   set third-resource-shock round random-normal 7500 500
-  set third-resource-shock-end third-resource-shock + round random-normal 1000 100
+  set third-resource-shock-end third-resource-shock + round random-normal resource-shock-duration 100
 
 
   set csv-list []
@@ -434,9 +434,9 @@ to resource-shock
 
   if ticks = first-resource-shock [
 
-  ask n-of 500 patches [
+  ask n-of resource-shock-area patches [
 
-    set resources 50
+    set resources resource-shock-intensity
     set pcolor brown
 
   ]]
@@ -452,9 +452,9 @@ to resource-shock
 
   if ticks = second-resource-shock [
 
-  ask n-of 500 patches [
+  ask n-of resource-shock-area patches [
 
-    set resources 50
+    set resources resource-shock-intensity
     set pcolor brown
 
   ]]
@@ -468,8 +468,8 @@ to resource-shock
 
   if ticks = third-resource-shock [
 
-    ask n-of 500 patches [
-      set resources 50
+    ask n-of resource-shock-area patches [
+      set resources resource-shock-intensity
       set pcolor brown
     ]
   ]
@@ -695,6 +695,51 @@ model-version
 model-version
 "normal" "scarcity"
 1
+
+SLIDER
+318
+408
+596
+441
+resource-shock-intensity
+resource-shock-intensity
+0
+100
+50.0
+1
+1
+resources
+HORIZONTAL
+
+SLIDER
+336
+454
+582
+487
+resource-shock-area
+resource-shock-area
+0
+1089
+500.0
+50
+1
+patches
+HORIZONTAL
+
+SLIDER
+346
+501
+566
+534
+resource-shock-duration
+resource-shock-duration
+0
+5000
+1000.0
+100
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
