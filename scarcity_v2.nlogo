@@ -145,9 +145,6 @@ to go
   ask turtles [
    reset-stats
    ;death
-    ;; we move the IF statement from protection-allocation up here, so it's easier to know what happens
-    ;; The reason we do this is that turtles should not learn from the first 10 ticks because otherwise we get too
-    ;; strong learning effects from just one or a few experiences.
     set protection calculate-protection
     ;; after an agent has decided how much effort to put into protection,
     ;; we subtract that amount from their total labor this tick
@@ -356,12 +353,16 @@ end
 
 
 to-report calculate-protection
+
+  ;; The reason we brach based on ticks is that turtles should not learn from the first 10 ticks because otherwise we get too
+  ;; strong learning effects from just one or a few experiences.
+
   ifelse ticks <= 10 [
     report risk-taking
   ]
   [
     let agez age
-      repeat 10 [
+    repeat 10 [
         set agez agez - 1
         set attackz attackz + table:get calendar agez
       ]
