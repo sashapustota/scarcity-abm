@@ -1,7 +1,10 @@
 extensions [table csv]
 
 patches-own [resources]
-turtles-own [labour age utility predationRes predationGoods protection production dict stratsum transfer technology experience resources-agent wealth goods calendar attackz risk-taking strategy-list strategy-utility-dict strategy-counter-dict strategy-success-dict current-strategy-success max-age]
+turtles-own [
+
+
+  labour age utility predationRes predationGoods protection production dict stratsum transfer technology experience resources-agent wealth goods calendar attackz risk-taking strategy-list strategy-utility-dict strategy-counter-dict strategy-success-dict current-strategy-success max-age]
 
 globals [alpha beta lambda csv-list condition first-resource-shock first-resource-shock-end second-resource-shock second-resource-shock-end third-resource-shock third-resource-shock-end]
 
@@ -142,7 +145,16 @@ to go
   ask turtles [
    reset-stats
    ;death
-   protection-allocation
+    ;; we move the IF statement from protection-allocation up here, so it's easier to know what happens
+    ;; The reason we do this is that turtles should not learn from the first 10 ticks because otherwise we get too
+    ;; strong learning effects from just one or a few experiences.
+    set protection calculate-protection
+    ;; after an agent has decided how much effort to put into protection,
+    ;; we subtract that amount from their total labor this tick
+    set labour labour - protection
+
+
+
    effort-allocation
    produce
    set resources-agent 0
@@ -337,28 +349,31 @@ end
 ; how many times the turtle has been attacked in the last 10 iterations)
 ; and risk-taking level which is assigned at birth (mean 12 + sd 3).
 
-to protection-allocation
-  if ticks >= 10 [
+to protection-allocation2
+
+
+end
+
+
+to-report calculate-protection
+  ifelse ticks <= 10 [
+    report risk-taking
+  ]
+  [
     let agez age
       repeat 10 [
         set agez agez - 1
         set attackz attackz + table:get calendar agez
       ]
     if attackz != 0 [
-        set protection risk-taking * sqrt attackz
+        report risk-taking * sqrt attackz
     ]
     if attackz = 0 [
-        set protection risk-taking * 1
+        report risk-taking * 1
     ]
   ]
 
-  if ticks <= 10 [
-      set protection risk-taking
-    ]
-  set labour labour - protection
 end
-
-
 
 to best-strategy-adaptation
 
@@ -528,11 +543,11 @@ end
 GRAPHICS-WINDOW
 268
 19
-450
-202
+592
+344
 -1
 -1
-10.9
+19.8
 1
 10
 1
@@ -1151,7 +1166,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
