@@ -145,27 +145,46 @@ to go
   ask turtles [
    reset-stats
    ;death
-    set protection calculate-protection
-    ;; after an agent has decided how much effort to put into protection,
-    ;; we subtract that amount from their total labor this tick
-    set labour labour - protection
+    ;; Turned off for now.
+   set protection calculate-protection
+    ;; First, the agent calculates how much effort or labour to allocate towards protection.
+   set labour labour - protection
+    ;; Then that amount is substracted from the total labour amount of the agent
 
+   effort-allocation ;; QUESTION HERE - HOW TO REFACTOR THIS FUNCTION
 
-
-   effort-allocation
-   produce
+   set goods calculate-production
+    ;; Now, if the agent has a production gene active, he produces a certain number of goods
+   set experience experience + production / 10000
+    ;; After he produces goods, his experience increases by the number of goods he has produced, scaled down.
+    ;; How much experience?
    set resources-agent 0
-   gather-resources
-   interact-with-neighbor
+    ;; Now that the agent has produced goods from resources (which he acquired during the last round), we reset his resources to 0.
+
+   set resources-agent gather-resources
+    ;; Agent collects resources from the patch he is standing on.
+
+   interact-with-neighbor ;; QUESTION HERE - NEEDS REFACTORING?
+
    ;set experience experience + 0.001
    set age age + 1
+    ;; The agent ages by one tick, we register that here.
+
    table:put calendar age 0
+    ;; This table acts as a calendar for the agent to keep track when he was attacked - so that he can allocate his efforts towards protection accordingly
    set utility utility + goods
+    ;; Utility is a measure of how many goods the agent has produced in total up to this tick
+
    increment-utility
+    ; This function helps track how much utility has the current strategy generated throughout the agents lifespan
    increment-counter
+    ; This function helps track how many ticks the current strategy has been used
    calculate-strategy-success
+    ; And this function calculates how succesful the current strategy is - by dividing total utility generated using the strategy by number of ticks it has been utilized.
    strategy-change
+    ; Every round, the agent has a 0.4% chance of "mutating" a new random strategy.
    best-strategy-adaptation
+    ; Similarly, every round, the agent has a 0.4% chance of switching to his most succesful strategy.
   ]
   tick
   resource-shock
@@ -174,8 +193,6 @@ to go
   ;write-csv
 end
 
-
-;This is kinda done.
 to interact-with-neighbor
   ; Select a random neighbour and interact with it
   let neighbor one-of link-neighbors
@@ -226,12 +243,11 @@ end
 
 ; This numbers of this needs to be checked. Like whether the resulting numbers are too low
 ; Or too high.
-to produce
+to-report calculate-production
   ; Checks if production "gene" is active"
   if item 2 strategy-list = 1 [
     ; Below is Cobb-Douglas production function from the paper (Eq. 2)
-  set goods production ^ alpha * (technology * (1 + experience) * sqrt wealth) ^ beta * ((1 + resources-agent) ^ lambda)
-  set experience experience + production / 10000
+  report production ^ alpha * (technology * (1 + experience) * sqrt wealth) ^ beta * ((1 + resources-agent) ^ lambda)
   ]
 
 end
@@ -240,9 +256,9 @@ end
 
 
 ; Every tick, the agents gather resources of the patch they are standing on
-to gather-resources
+to-report gather-resources
   if resources > 0 [
-    set resources-agent resources
+    report resources
   ]
 end
 
@@ -1167,7 +1183,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
