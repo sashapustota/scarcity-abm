@@ -45,10 +45,10 @@ to setup
 
   ;; create agends based on a slider (slider allows you to pick how many agents)
   ;crt num-agents [
-    ;setxy random-xcor random-ycor
+  ;setxy random-xcor random-ycor
 
-    ;set color white
-    ;set shape "person"
+  ;set color white
+  ;set shape "person"
 
   ;]
 
@@ -59,8 +59,8 @@ to setup
   ask turtles [
     create-links-with turtles-on neighbors4
   ]
-;    if any? other turtles in-radius num-connections [
-;      repeat num-connections [ create-link-with one-of other turtles in-radius connections-radius ]]
+  ;    if any? other turtles in-radius num-connections [
+  ;      repeat num-connections [ create-link-with one-of other turtles in-radius connections-radius ]]
 
   ask turtles [
 
@@ -143,47 +143,57 @@ to go
   ;; So, as per paper, they first check their age and if they're too old they
   ;; die.
   ask turtles [
-   reset-stats
-   ;death
+    reset-stats
+    ;death
     ;; Turned off for now.
-   set protection calculate-protection
+    set protection calculate-protection
     ;; First, the agent calculates how much effort or labour to allocate towards protection.
-   set labour labour - protection
+    set labour labour - protection
     ;; Then that amount is substracted from the total labour amount of the agent
 
-   effort-allocation ;; QUESTION HERE - HOW TO REFACTOR THIS FUNCTION
+    let effort-allocations effort-allocation ;; QUESTION HERE - HOW TO REFACTOR THIS FUNCTION. Like this, it's also a reporter now :)
 
-   set goods calculate-production
+    set predationRes item 0 effort-allocations
+    set predationGoods item 1 effort-allocations
+    set production item 2 effort-allocations
+
+    set goods calculate-production
     ;; Now, if the agent has a production gene active, he produces a certain number of goods
-   set experience experience + production / 10000
+    set experience experience + production / 10000
     ;; After he produces goods, his experience increases by the number of goods he has produced, scaled down.
     ;; How much experience?
-   set resources-agent 0
+
+
+    ;;AH: when you change the code to fix ordering, move this up to before turtle variables are reset each round. And then reset it
+    set resources-agent 0
     ;; Now that the agent has produced goods from resources (which he acquired during the last round), we reset his resources to 0.
 
-   set resources-agent gather-resources
+    set resources-agent gather-resources
     ;; Agent collects resources from the patch he is standing on.
 
-   interact-with-neighbor ;; QUESTION HERE - NEEDS REFACTORING?
 
-   ;set experience experience + 0.001
-   set age age + 1
+  ]
+  ask turtles [
+    interact-with-neighbor ;; QUESTION HERE - NEEDS REFACTORING?
+
+    ;set experience experience + 0.001
+    set age age + 1
     ;; The agent ages by one tick, we register that here.
 
-   table:put calendar age 0
+    table:put calendar age 0
     ;; This table acts as a calendar for the agent to keep track when he was attacked - so that he can allocate his efforts towards protection accordingly
-   set utility utility + goods
+    set utility utility + goods
     ;; Utility is a measure of how many goods the agent has produced in total up to this tick
 
-   increment-utility
+    increment-utility
     ; This function helps track how much utility has the current strategy generated throughout the agents lifespan
-   increment-counter
+    increment-counter
     ; This function helps track how many ticks the current strategy has been used
-   calculate-strategy-success
+    calculate-strategy-success
     ; And this function calculates how succesful the current strategy is - by dividing total utility generated using the strategy by number of ticks it has been utilized.
-   strategy-change
+    strategy-change
     ; Every round, the agent has a 0.4% chance of "mutating" a new random strategy.
-   best-strategy-adaptation
+    best-strategy-adaptation
     ; Similarly, every round, the agent has a 0.4% chance of switching to his most succesful strategy.
   ]
   tick
@@ -202,7 +212,8 @@ to interact-with-neighbor
     ; If so - proceeds to predates resources
     if predationRes != 0 [
       ; Below is the conflict function from the paper (Eq. 3)
-      let transferino (predationRes / (predationRes + ([protection] of neighbor + predationRes)))
+      let transferino (predationRes / (predationRes + ([protection] of neighbor + predationRes))) ;  AH: bug here, I think the below is what they do
+
       set transfer transferino
       ; The outcome of the conflict is added to the resources
       set resources-agent resources-agent + transfer
@@ -212,8 +223,8 @@ to interact-with-neighbor
         ; Make a note in his calendar that he was attacked
         table:put calendar age 1
 
-            ]
-        ]
+      ]
+    ]
 
     ; The below is the same but for Goods instead of Resources.
     if predationGoods != 0 [
@@ -228,14 +239,14 @@ to interact-with-neighbor
 
     ;; Lastly we give an opportunity to change the strategy list according to neighbors current strategy success.
     if current-strategy-success > [current-strategy-success] of neighbor [
-        let i random 100
-        let j strategy-list
+      let i random 100
+      let j strategy-list
       if i < 0.4 [
-      ask neighbor [
-        set strategy-list j
-        if table:has-key? strategy-utility-dict strategy-list = FALSE [table:put strategy-utility-dict strategy-list 0]
-        if table:has-key? strategy-counter-dict strategy-list = FALSE [table:put strategy-counter-dict strategy-list 0]
-        if table:has-key? strategy-success-dict strategy-list = FALSE [table:put strategy-success-dict strategy-list 0]]
+        ask neighbor [
+          set strategy-list j
+          if table:has-key? strategy-utility-dict strategy-list = FALSE [table:put strategy-utility-dict strategy-list 0]
+          if table:has-key? strategy-counter-dict strategy-list = FALSE [table:put strategy-counter-dict strategy-list 0]
+          if table:has-key? strategy-success-dict strategy-list = FALSE [table:put strategy-success-dict strategy-list 0]]
       ]
     ]
   ]
@@ -245,10 +256,9 @@ end
 ; Or too high.
 to-report calculate-production
   ; Checks if production "gene" is active"
-  if item 2 strategy-list = 1 [
-    ; Below is Cobb-Douglas production function from the paper (Eq. 2)
-  report production ^ alpha * (technology * (1 + experience) * sqrt wealth) ^ beta * ((1 + resources-agent) ^ lambda)
-  ]
+  ; Below is Cobb-Douglas production function from the paper (Eq. 2)
+
+    report production ^ alpha * (technology * (1 + experience) * sqrt wealth) ^ beta * ((1 + resources-agent) ^ lambda)
 
 end
 
@@ -271,44 +281,44 @@ to death
 
     hatch number-of-offspring [
 
-    if any? other turtles in-radius 10 [
-      repeat 10 [ create-link-with one-of other turtles in-radius 10 ]
+      if any? other turtles in-radius 10 [
+        repeat 10 [ create-link-with one-of other turtles in-radius 10 ]
 
-    set age 0
-    set utility 0
-    set labour 100
-    set predationRes 0
-    set predationGoods 0
-    set production 0
-    set risk-taking random-normal 12 3
-    set protection 0
-    set max-age random-normal 2500 500
-    set transfer 0
-    set technology 1
-    set experience 0
-    set goods 0
-    set attackz 0
-    set wealth 1
+        set age 0
+        set utility 0
+        set labour 100
+        set predationRes 0
+        set predationGoods 0
+        set production 0
+        set risk-taking random-normal 12 3
+        set protection 0
+        set max-age random-normal 2500 500
+        set transfer 0
+        set technology 1
+        set experience 0
+        set goods 0
+        set attackz 0
+        set wealth 1
 
-    set strategy-list i
+        set strategy-list i
 
-    set current-strategy-success 0
+        set current-strategy-success 0
 
-    set strategy-utility-dict table:make
-    table:put strategy-utility-dict strategy-list 0
+        set strategy-utility-dict table:make
+        table:put strategy-utility-dict strategy-list 0
 
-    set strategy-counter-dict table:make
-    table:put strategy-counter-dict strategy-list 0
+        set strategy-counter-dict table:make
+        table:put strategy-counter-dict strategy-list 0
 
-    set strategy-success-dict table:make
-    table:put strategy-success-dict strategy-list 0
-
-
-    set calendar table:make
-    table:put calendar age 0
+        set strategy-success-dict table:make
+        table:put strategy-success-dict strategy-list 0
 
 
-    ]
+        set calendar table:make
+        table:put calendar age 0
+
+
+      ]
     ]
 
     die ]
@@ -317,45 +327,55 @@ end
 ; A function that allocates labour (which is can be thought of as 8 hours per day, here - 100 units)
 ; Labour is distributed equally to genes that are active - predation of resouces, goods or production
 ; Before this distribution, part of labour is firstly allocated to protection (see above)
-to effort-allocation
+to-report effort-allocation
   ;code here
 
-  if sum strategy-list = 0 [
-    if item 0 strategy-list = 1 [set predationRes labour / 1]
-    if item 1 strategy-list = 1 [set predationGoods labour / 1]
-    if item 2 strategy-list = 1 [set production labour / 1]
-  ]
+  let predR labour / sum strategy-list * item 0 strategy-list
+  let predG labour / sum strategy-list * item 1 strategy-list
+  let prod labour / sum strategy-list * item 2 strategy-list
 
-  if sum strategy-list = 1 [
-    if item 0 strategy-list = 1 [set predationRes labour / 1]
-    if item 1 strategy-list = 1 [set predationGoods labour / 1]
-    if item 2 strategy-list = 1 [set production labour / 1]
-  ]
+  report (list predR predG prod)
 
-  if sum strategy-list = 2 [
-    if item 0 strategy-list = 1 [set predationRes labour / 2]
-    if item 1 strategy-list = 1 [set predationGoods labour / 2]
-    if item 2 strategy-list = 1 [set production labour / 2]
-  ]
-
-  if sum strategy-list = 3 [
-    if item 0 strategy-list = 1 [set predationRes labour / 3]
-    if item 1 strategy-list = 1 [set predationGoods labour / 3]
-    if item 2 strategy-list = 1 [set production labour / 3]
-  ]
+  ;
+  ;
+  ;
+  ;  ]
+  ;  if sum strategy-list = 0 [
+  ;    if item 0 strategy-list = 1 [set predationRes labour / 1]
+  ;    if item 1 strategy-list = 1 [set predationGoods labour / 1]
+  ;    if item 2 strategy-list = 1 [set production labour / 1]
+  ;  ]
+  ;
+  ;  if sum strategy-list = 1 [
+  ;    if item 0 strategy-list = 1 [set predationRes labour / 1]
+  ;    if item 1 strategy-list = 1 [set predationGoods labour / 1]
+  ;    if item 2 strategy-list = 1 [set production labour / 1]
+  ;  ]
+  ;
+  ;  if sum strategy-list = 2 [
+  ;    if item 0 strategy-list = 1 [set predationRes labour / 2]
+  ;    if item 1 strategy-list = 1 [set predationGoods labour / 2]
+  ;    if item 2 strategy-list = 1 [set production labour / 2]
+  ;  ]
+  ;
+  ;  if sum strategy-list = 3 [
+  ;    if item 0 strategy-list = 1 [set predationRes labour / 3]
+  ;    if item 1 strategy-list = 1 [set predationGoods labour / 3]
+  ;    if item 2 strategy-list = 1 [set production labour / 3]
+  ;  ]
 
 end
 
 ; At the end of each tick, some turtle parameters are reset.
 to reset-stats
-   set goods 0
-   set predationRes 0
-   set predationGoods 0
-   set production 0
-   set protection 0
-   set labour effort-per-tick
-   set transfer 0
-   set attackz 0
+  set goods 0
+  set predationRes 0
+  set predationGoods 0
+  set production 0
+  set protection 0
+  set labour effort-per-tick
+  set transfer 0
+  set attackz 0
 end
 
 ; Function for protection allocation based on danger (as measured by
@@ -379,14 +399,14 @@ to-report calculate-protection
   [
     let agez age
     repeat 10 [
-        set agez agez - 1
-        set attackz attackz + table:get calendar agez
-      ]
+      set agez agez - 1
+      set attackz attackz + table:get calendar agez
+    ]
     if attackz != 0 [
-        report risk-taking * sqrt attackz
+      report risk-taking * sqrt attackz
     ]
     if attackz = 0 [
-        report risk-taking * 1
+      report risk-taking * 1
     ]
   ]
 
@@ -396,11 +416,11 @@ to best-strategy-adaptation
 
   let j random 100
 
-  if j <= 0.4 [
+  if j <= 4 [
 
-  let i max table:values strategy-success-dict
+    let i max table:values strategy-success-dict
 
-  foreach (table:keys strategy-success-dict) [ x -> if table:get strategy-success-dict x = i [ set strategy-list x ]
+    foreach (table:keys strategy-success-dict) [ x -> if table:get strategy-success-dict x = i [ set strategy-list x ]
     ]
   ]
 
@@ -410,7 +430,7 @@ to strategy-change
 
   let j random 100
 
-  if j <= 0.4 [
+  if j <= 4 [
 
     set strategy-list (list random 2 random 2 random 2)
     if table:has-key? strategy-utility-dict strategy-list = FALSE [table:put strategy-utility-dict strategy-list 0]
@@ -446,9 +466,9 @@ end
 
 ; procedure to write some turtle properties to a file
 ;to write-turtles-to-csv
-  ; we use the `of` primitive to make a list of lists and then
-  ; use the csv extension to write that list of lists to a file.
-  ;csv:to-file "turtles.csv" [ (list xcor ycor size color heading) ] of turtles
+; we use the `of` primitive to make a list of lists and then
+; use the csv extension to write that list of lists to a file.
+;csv:to-file "turtles.csv" [ (list xcor ycor size color heading) ] of turtles
 ;end
 
 
@@ -475,7 +495,7 @@ to resource-shock
           set resources resource-shock-intensity
           set pcolor brown ]
 
-      if shock-type = "random" [
+        if shock-type = "random" [
 
           ask n-of resource-shock-area patches [
             set resources resource-shock-intensity
@@ -484,16 +504,16 @@ to resource-shock
 
     ]]]
 
-  if ticks = first-resource-shock-end [
+    if ticks = first-resource-shock-end [
 
-    ask patches [
+      ask patches [
         set resources 100
         set pcolor green
       ]
 
-  ]
+    ]
 
-  if ticks = second-resource-shock [
+    if ticks = second-resource-shock [
 
       if shock-type = "line" [
 
@@ -503,47 +523,47 @@ to resource-shock
 
       if shock-type = "random" [
 
-          ask n-of resource-shock-area patches [
-            set resources resource-shock-intensity
-            set pcolor brown
+        ask n-of resource-shock-area patches [
+          set resources resource-shock-intensity
+          set pcolor brown
       ]]
 
 
-  ]
+    ]
 
-  if ticks = second-resource-shock-end [
+    if ticks = second-resource-shock-end [
 
-    ask patches [
-      set resources 100
-      set pcolor green
+      ask patches [
+        set resources 100
+        set pcolor green
       ]
 
-  ]
+    ]
 
-  if ticks = third-resource-shock [
+    if ticks = third-resource-shock [
 
       if shock-type = "line" [
 
         ask patches with [ pycor < min-pycor + shock-row-number ] [
           set resources resource-shock-intensity
           set pcolor brown ]
-          ]
+      ]
 
       if shock-type = "random" [
 
-          ask n-of resource-shock-area patches [
-            set resources resource-shock-intensity
-            set pcolor brown
-          ]
+        ask n-of resource-shock-area patches [
+          set resources resource-shock-intensity
+          set pcolor brown
+        ]
+      ]
     ]
-  ]
 
-  if ticks = third-resource-shock-end [
-    ask patches [
-      set resources 100
-      set pcolor green
+    if ticks = third-resource-shock-end [
+      ask patches [
+        set resources 100
+        set pcolor green
+      ]
     ]
-  ]
   ]
 
 end
@@ -1183,7 +1203,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
